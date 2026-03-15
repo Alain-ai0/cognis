@@ -2,8 +2,9 @@ import pandas as pd
 from pydantic import BaseModel
 from typing import List
 import os
+import ollama
 
-# 1. Define what a "Categorized Transaction" looks like
+# 1. Defines the structure of a single transaction for validation
 class Transaction(BaseModel):
     date: str
     description: str
@@ -49,8 +50,12 @@ class FinanceProcessor:
         return self.df[self.df["amount"] > limit]
 
     def get_ai_category(self, description: str):
-
-    # Define a map
+        """
+        Assigns a category using a fast local lookup, falling back to a local LLM (Ollama) for complex descriptions.
+        """
+        # Check local dictionary first (Fast & Free)
+        # Define a map
+        # Priority 1: Instant lookup for common/known vendors
         mapping = {
             "Starbucks": "Food & Drink",
             "Netflix": "Subscriptions",
@@ -62,12 +67,41 @@ class FinanceProcessor:
         # 'desc_lower' makes it case-insensitive
         desc_lower = description.lower()
 
+        # ... (dictionary loop code)
         for keyword, category in mapping.items():
             if keyword.lower() in desc_lower:
                 return category
+            
+        # Priority 2: Use Llama3 to 'guess' categories for unknown stores
+        categories = "Housing, Transportation, Food & Drink, Utilities, Subscriptions, Entertainment, Shopping, Health, Miscellaneous"
+        
+        # System role defines the 'Rules'; User role provides the 'Data
+        messages = [
+            {
+                "role": "system",
+                "content": f"You are a professional accountant. Your job is to categorize bank transactions into exactly one of these categories: [{categories}]. Respond with ONLY the category name."
+            },
+            {
+                "role": "user",
+                "content": f"Categorize this transaction: '{description}'"
+            }
+        ]
 
-        # The Fallback
-        return "Miscellaneous"
+        try:
+            # Synchronous call to local Ollama server
+            response = ollama.chat(model='llama3', messages=messages)
+            return response['message']['content'].strip()
+        except Exception as e:
+            # Fallback to prevent the entire pipeline from crashing
+            print(f"AI Error: {e}")
+            return "Miscellaneous"
+        
+    def save_data(self, output_path: str):
+        """Save the processed DataFrame to a new CSV."""
+        if self.df is None:
+            raise ValueError("Data is not loaded. Call load_data() first.")
+        self.df.to_csv(output_path, index=False)
+        print(f"Processed data saved to: {output_path}")
 
 # --- Execution Block ---
 if __name__ == "__main__":
@@ -87,3 +121,6 @@ if __name__ == "__main__":
 
     print("\n--- BIG SPENDERS ---")
     print(big_stuff)
+
+    output_file = "../data/processed_transactions.csv"
+    processor.save_data(output_file)
