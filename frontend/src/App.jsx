@@ -1,13 +1,16 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useMemo } from 'react';
 import axios from 'axios';
-import { Wallet, ArrowUpRight, ArrowDownLeft, BarChart3 } from 'lucide-react';
+import { Wallet, ArrowUpRight, ArrowDownLeft, BarChart3, TrendingDown } from 'lucide-react';
+import { PieChart, Pie, Cell, ResponsiveContainer, Tooltip, Legend } from 'recharts';
+
+// Colors for a high-fidelity look
+const COLORS = ['#10b981', '#3b82f6', '#8b5cf6', '#f59e0b', '#ef4444', '#06b6d4'];
 
 function App() {
-  // 1. State: This is the memory of your app
+  // 1. State: This is the memory of my app
   const [transactions, setTransactions] = useState([]);
   const [loading, setLoading] = useState(true);
 
-  // 2. Fetch Logic: Calling your FastAPI server
   useEffect(() => {
     const fetchData = async () => {
       try {
@@ -22,41 +25,94 @@ function App() {
     fetchData();
   }, []);
 
+// Calculate totals and group data for the chart
+const { totalSpent, chartData } = useMemo(() => {
+  const total = transactions.reduce((acc, curr) => acc + curr.amount, 0);
+
+  // Group by category
+  const grouped = transactions.reduce((acc, curr) => {
+    acc[curr.category] = (acc[curr.category] || 0) + curr.amount;
+    return acc;
+  }, {});
+
+  // Recharts
+  const formattedData = Object.keys(grouped).map(key => ({
+    name: key,
+    value: parseFloat(grouped[key].toFixed(2))
+  }));
+
+  return { totalSpent: total, chartData: formattedData };
+}, [transactions]);
+
   return (
     <div className="min-h-screen bg-slate-950 text-slate-50 p-8">
       {/* Header Area */}
-      <header className="flex justify-between items-center mb-12">
+      <header className="flex justify-between items-center mb-10 max-w-6xl mx-auto">
         <div>
           <h1 className="text-3xl font-bold flex items-center gap-2">
             <Wallet className="text-emerald-400" /> Fin-Flow
           </h1>
           <p className="text-slate-400">AI-Powered Financial Insights</p>
         </div>
-        <div className="bg-slate-900 p-3 rounded-xl border border-slate-800">
-          <span className="text-sm text-slate-400">System Status:</span>
-          <span className="ml-2 text-emerald-400 font-mono text-sm">ONLINE</span>
+        <div className="bg-slate-900 px-4 py-2 rounded-xl border border-slate-800 flex items-center gap-3">
+          <span className="h-2 w-2 bg-emerald-400 rounded-full animated-pulse"></span>
+          <span className="text-sm font-mono text-emerald-400">API CONNECTED</span>
         </div>
       </header>
 
-      {/* Main Dashboard Grid */}
-      <main className="max-w-6xl mx-auto">
-        {loading ? (
-          <div className="flex justify-center items-center h-64">
-            <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-emerald-400"></div>
+      <main className="max-w-6xl mx-auto space-y-8">
+        {/* TOP CARDS SECTION */}
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+          <div className="bg-slate-900 p-6 rounded-2xl border border-slate-800">
+            <div className="flex items-center gap-3 text-slate-400 mb-2">
+              <TrendingDown size={18} />
+              <span className="text-sm font-medium uppercase tracking-wider">Total Spending</span>
+            </div>
+            <div className="text-3xl font-bold">${totalSpent.toLocaleString(undefined, {minimumFractionDigits: 2})}</div>
           </div>
-        ) : (
-          <div className="grid grid-cols-1 gap-6">
-            {/* Transaction List Card */}
+
+          <div className="bg-slate-900 p-6 rounded-2xl border border-slate-800 md:col-span-2 flex items-center justify-between">
+            <div className="h-[200px] w-full min-w-0">
+              {/* PIE CHART */}
+              <ResponsiveContainer width="100%" height="100%">
+                <PieChart>
+                  <Pie
+                    data={chartData}
+                    innerRadius={40}
+                    outerRadius={60}
+                    paddingAngle={5}
+                    dataKey="value"
+                  >
+                    {chartData.map((entry, index) => (
+                      <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} stroke="none" />
+                    ))}
+                  </Pie>
+                  <Tooltip
+                    contentStyle={{ backgroundColor: '#0f172a', border: '1px solid #1e293b', borderRadius: '8px' }}
+                    itemStyle={{ color: '#f8fafc'}}
+                  />
+                  <Legend iconType="circle" />
+                </PieChart>
+              </ResponsiveContainer>
+            </div>
+            <div className="hidden lg:block pr-8">
+              <h3 className="text-slate-400 text-sm mb-1 uppercase">Breakdown</h3>
+              <p className="text-xs text-slate-500 max-w-[200px]">Visualizing your expenses across {chartData.length} AI-identified categories.</p>
+            </div>
+          </div>
+        </div>
+
+            {/* Recent transactions table */}
             <div className="bg-slate-900 rounded-2xl border border-slate-800 overflow-hidden">
-              <div className="p-6 border-b border-slate-800 flex justify-between items-center">
-                <h2 className="text-xl font-semibold">Recent Transactions</h2>
+              <div className="p-6 border-b border-slate-800 flex justify-between items-center bg-slate-900/50">
+                <h2 className="text-xl font-semibold">Transactions History</h2>
                 <BarChart3 className="text-slate-500" size={20} />
               </div>
               
               <div className="overflow-x-auto">
                 <table className="w-full text-left">
                   <thead>
-                    <tr className="bg-slate-900/50 text-slate-400 text-sm">
+                    <tr className="text-slate-500 text-xs uppercase tracking-wider border-b border-slate-800">
                       <th className="p-4 font-medium">Date</th>
                       <th className="p-4 font-medium">Description</th>
                       <th className="p-4 font-medium">Category</th>
@@ -65,15 +121,15 @@ function App() {
                   </thead>
                   <tbody className="divide-y divide-slate-800">
                     {transactions.map((t, index) => (
-                      <tr key={index} className="hover:bg-slate-800/40 transition-colors">
-                        <td className="p-4 text-sm text-slate-300">{t.date}</td>
-                        <td className="p-4 font-medium">{t.description}</td>
+                      <tr key={index} className="hover:bg-slate-800/30 transition-colors group">
+                        <td className="p-4 text-sm text-slate-400 font-mono">{t.date}</td>
+                        <td className="p-4 font-medium text-slate-200">{t.description}</td>
                         <td className="p-4">
-                          <span className="px-3 py-1 rounded-full text-xs font-semibold bg-emerald-500/10 text-emerald-400 border border-emerald-500/20">
+                          <span className="px-3 py-1 rounded-full text-[10px] font-bold uppercase tracking-widest bg-emerald-500/10 text-emerald-400 border border-emerald-500/20">
                             {t.category}
                           </span>
                         </td>
-                        <td className="p-4 text-right font-mono font-semibold">
+                        <td className="p-4 text-right font-mono font-bold text-slate-100">
                           ${t.amount.toFixed(2)}
                         </td>
                       </tr>
@@ -82,8 +138,6 @@ function App() {
                 </table>
               </div>
             </div>
-          </div>
-        )}
       </main>
     </div>
   );
