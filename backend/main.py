@@ -25,28 +25,40 @@ os.makedirs(UPLOAD_DIR, exist_ok=True)
 
 def process_and_categorize(file_path: str, proc: FinanceProcessor):
     try:
-        # Load the raw uploaded data
-        df = pd.read_csv(file_path)
-        print(f"Starting AI categorization for {len(df)} transactions...")
+        # 1. Load and Categorize New Data
+        new_df = pd.read_csv(file_path)
+        print(f"--- NEW UPLOAD: {len(new_df)} rows ---")
+        
+        new_df['category'] = new_df['description'].apply(proc.get_ai_category)
 
-        categories = []
-        for desc in df['description']:
-            cat = proc.get_ai_category(desc)
-            categories.append(cat)
-            print(f"Categorized: {desc} -> {cat}")
-            time.sleep(1)
-
-        df['category'] = df['description'].apply(proc.get_ai_category)
-
-        # Save to the 'active' file for the dashboard to read
         active_path = os.path.join(DATA_DIR, "active_transactions.csv")
-        df.to_csv(active_path, index=False)
-        print("Categorization successful!")
-        return df
+        
+        # 2. Check for Existing Data
+        if os.path.exists(active_path):
+            try:
+                existing_df = pd.read_csv(active_path)
+                print(f"--- FOUND EXISTING: {len(existing_df)} rows ---")
+                
+                # Combine
+                combined_df = pd.concat([existing_df, new_df], ignore_index=True, sort=False)
+                
+                # De-duplicate
+                final_df = combined_df.drop_duplicates(subset=['date', 'description', 'amount'])
+                print(f"--- MERGE COMPLETE: Total rows now {len(final_df)} ---")
+            except Exception as merge_err:
+                print(f"Merge failed, falling back to new data only: {merge_err}")
+                final_df = new_df
+        else:
+            print("--- NO EXISTING FILE: Starting fresh ---")
+            final_df = new_df
+
+        # 3. Final Save
+        final_df.to_csv(active_path, index=False)
+        print(f"--- FILE SAVED TO: {active_path} ---")
+        return final_df
 
     except Exception as e:
-        print(f"Error during AI pipeline: {e}")
-        # If it fails, we still want a file to exist so the frontend doesn't break
+        print(f"Critical Pipeline Error: {e}")
         return None
         
 
