@@ -1,19 +1,17 @@
 date,description,amount,category
-2026-04-20,Uber Trip to Downtown,24.5,Miscellaneous
-2026-04-21,Monthly Netflix Premium,19.99,Subscriptions
-2026-04-21,Chipotle Mexican Grill,15.75,Miscellaneous
-2026-04-22,Shell Oil Gas Station,55.0,Transport
-2026-04-22,Amazon Web Services Cloud,32.1,Miscellaneous
-2026-04-23,Starbucks Coffee,6.5,Food & Drink
-2026-04-23,Steam Games - Elden Ring,59.99,Entertainment
-2026-04-24,Whole Foods Market,88.2,Groceries
-2026-04-24,Spotify Family Plan,16.99,Miscellaneous
-2026-04-25,Apple App Store,4.99,Miscellaneous
 2026-04-26,Gaming Headset,89.0,Miscellaneous
 2026-04-27,Sushi Dinner,45.5,Miscellaneous
-2026-04-28,Gym Membership,30.0,Miscellaneous
-2026-02-01,Starbucks Coffee,5.5,Food & Drink
-2026-02-02,Netflix Subscription,15.99,Subscriptions
-2026-02-03,Shell Gas Station,45.0,Transport
-2026-02-04,Whole Foods Market,120.3,Groceries
-2026-02-05,Steam Games,29.99,Entertainment
+2026-04-28,Gym Membership Update,30.0,Miscellaneous
+2026-04-01,Groceries - Whole Foods,85.2,Groceries
+2026-04-02,Starbucks Coffee,6.5,Food & Drink
+2026-04-29,Movie Tickets,35.0,Miscellaneous
+2026-04-30,Pharmacy,12.5,Miscellaneous
+2026-05-01,Internet Bill,80.0,Miscellaneous
+2026-04-03,Amazon - Electronics,120.0,Miscellaneous
+2026-04-04,Shell Gas Station,55.0,Transport
+2026-04-05,Netflix Subscription,15.99,Subscriptions
+2026-04-06,Rent Payment,1200.0,Miscellaneous
+2026-04-07,Gym Membership,45.0,Miscellaneous
+2026-04-08,Uber Ride,22.4,Miscellaneous
+2026-04-09,Local Bistro Dinner,65.0,Miscellaneous
+2026-04-10,Apple iCloud Storage,0.99,Miscellaneous

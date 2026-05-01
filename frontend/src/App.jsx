@@ -63,17 +63,19 @@ function App() {
     }
   }, []); // The Empty array means this function only get created once
 
-  useEffect(() => {
-    const fetchData = async () => {
+  const handleClearData = async () => {
+    if (window.confirm("Are you sure you want to delete all transaction history?")) {
       try {
-        const response = await axios.get('http://127.0.0.1:8000/transactions');
-        setTransactions(response.data.transactions);
-        setLoading(false);
+        await axios.delete('http://127.0.0.1:8000/clear-data');
+        setTransactions([]); // Clear UI immediately
+        alert("Database reset successfully.");
       } catch (error) {
-        console.error("Error fetching data:", error);
-        setLoading(false);
+        alert("Failed to clear data: " + error.message);
       }
-    };
+    }
+  };
+
+  useEffect(() => {
     fetchData();
   }, [fetchData]);
 
@@ -106,9 +108,19 @@ const { totalSpent, chartData } = useMemo(() => {
           </h1>
           <p className="text-slate-400">AI-Powered Financial Insights</p>
         </div>
+
+        <div className="flex items-center gap-4">
+          <button
+            onClick={handleClearData}
+            className="text-xs font-bold text-slate-500 hover:text-red-400 uppercase tracking-widest transition-colors border border-slate-800 hover:border-red-500/50 px-3 py-2 rounded-lg"
+          >
+            Clear history
+          </button>
+        
         <div className="bg-slate-900 px-4 py-2 rounded-xl border border-slate-800 flex items-center gap-3">
           <span className="h-2 w-2 bg-emerald-400 rounded-full animated-pulse"></span>
           <span className="text-sm font-mono text-emerald-400">API CONNECTED</span>
+        </div>
         </div>
       </header>
 

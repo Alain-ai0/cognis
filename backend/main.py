@@ -18,10 +18,16 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
-DATA_DIR = "data"
-os.makedirs(DATA_DIR, exist_ok=True)
-UPLOAD_DIR = "../data/uploads"
+BASE_DIR = os.path.dirname(os.path.abspath(__file__))
+
+DATA_DIR = os.path.join(BASE_DIR, "data")
+UPLOAD_DIR = os.path.join(DATA_DIR, "uploads")
+
+# Create folders
 os.makedirs(UPLOAD_DIR, exist_ok=True)
+
+# Master file path to be used everywhere
+ACTIVE_FILE = os.path.join(DATA_DIR, "active_transactions.csv")
 
 def process_and_categorize(file_path: str, proc: FinanceProcessor):
     try:
@@ -31,34 +37,22 @@ def process_and_categorize(file_path: str, proc: FinanceProcessor):
         
         new_df['category'] = new_df['description'].apply(proc.get_ai_category)
 
-        active_path = os.path.join(DATA_DIR, "active_transactions.csv")
-        
         # 2. Check for Existing Data
-        if os.path.exists(active_path):
-            try:
-                existing_df = pd.read_csv(active_path)
-                print(f"--- FOUND EXISTING: {len(existing_df)} rows ---")
-                
-                # Combine
-                combined_df = pd.concat([existing_df, new_df], ignore_index=True, sort=False)
-                
-                # De-duplicate
-                final_df = combined_df.drop_duplicates(subset=['date', 'description', 'amount'])
-                print(f"--- MERGE COMPLETE: Total rows now {len(final_df)} ---")
-            except Exception as merge_err:
-                print(f"Merge failed, falling back to new data only: {merge_err}")
-                final_df = new_df
+        if os.path.exists(ACTIVE_FILE):
+            existing_df = pd.read_csv(ACTIVE_FILE)
+            print(f"--- FOUND EXISTING: {len(existing_df)} rows ---")
+            combined_df = pd.concat([existing_df, new_df], ignore_index=True, sort=False)
+            final_df = combined_df.drop_duplicates(subset=['date', 'description', 'amount'])
         else:
-            print("--- NO EXISTING FILE: Starting fresh ---")
             final_df = new_df
 
         # 3. Final Save
-        final_df.to_csv(active_path, index=False)
-        print(f"--- FILE SAVED TO: {active_path} ---")
+        final_df.to_csv(ACTIVE_FILE, index=False)
+        print(f"--- SUCCESS: Data saved to {ACTIVE_FILE} ---")
         return final_df
 
     except Exception as e:
-        print(f"Critical Pipeline Error: {e}")
+        print(f"Pipeline Error: {e}")
         return None
         
 
@@ -71,23 +65,32 @@ async def upload_csv(file: UploadFile = File(...)):
     with open(file_path, "wb") as buffer:
         shutil.copyfileobj(file.file, buffer)
 
-    # Triger the ai pipeline
+    # Trigger the ai pipeline
     # This turns the raw CSV into a categorized "Active" file
     process_and_categorize(file_path, finance_engine)
     return {
-        "message": "AI Categorization Complete",
-        "filename": file.filename,
         "status": "success"
     }
 
-
 @app.get("/transactions")
 async def get_transactions():
-    # Always read from the 'active' file created by the pipeline
-    active_path = os.path.join(DATA_DIR, "active_transactions.csv")
-    if os.path.exists(active_path):
-        df = pd.read_csv(active_path)
-        # Handle empty amounts or NaNs just in case
-        df = df.fillna({"amount": 0, "category": "Uncategorized"})
-        return {"transactions": df.to_dict(orient="records")}
+    if os.path.exists(ACTIVE_FILE):
+        try:
+            df = pd.read_csv(ACTIVE_FILE)
+            if df.empty:
+                return {"transactions": []}
+            df = df.fillna({"amount": 0, "category": "Uncategorized"})
+            return {"transactions": df.to_dict(orient="records")}
+        except Exception as e:
+            print(f"Read Error: {e}")
+            return {"transactions": []}
     return {"transactions": []}
+    
+@app.delete("/clear-data")
+async def clear_data():
+    if os.path.exists(ACTIVE_FILE):
+        # overwrite the file with empty headers
+        df = pd.DataFrame(columns=["date", 'description', 'amount', 'category'])
+        df.to_csv(ACTIVE_FILE, index=False)
+        return {"message": "Data cleared"}
+    return {"message": "Nothing to clear"}

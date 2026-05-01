@@ -56,6 +56,11 @@ cmake-build-*/
 # IntelliJ
 out/
 
+# Transaction data
+backend/data/*.csv
+backend/data/uploads/
+data/
+
 # mpeltonen/sbt-idea plugin
 .idea_modules/
 
