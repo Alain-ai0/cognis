@@ -79,6 +79,22 @@ function App() {
     fetchData();
   }, [fetchData]);
 
+  const [searchQuery, setSearchQuery] = useState("");
+
+  const filteredTransactions = transactions.filter((tx) => {
+    const query = searchQuery.toLowerCase();
+    return (
+      tx.description.toLowerCase().includes(query) ||
+      tx.category.toLowerCase().includes(query) ||
+      tx.amount.toString().includes(query)
+    );
+  });
+
+  const handleNeuralSearch = () => {
+    if (!searchQuery) return;
+    console.log(`Analyzing: ${searchQuery}`);
+  }
+
 // Calculate totals and group data for the chart
 const { totalSpent, chartData } = useMemo(() => {
   const total = transactions.reduce((acc, curr) => acc + curr.amount, 0);
@@ -170,7 +186,47 @@ const { totalSpent, chartData } = useMemo(() => {
           <h3 className="text-slate-400 text-sm mb-4 uppercase tracking-widest">Data Input</h3>
           <FileUpload onUploadSuccess={fetchData} />
         </div>
+            
+            <p className="text-[10px] uppercase tracking-[0.2em] text-gray-500 ml-1 mb-2 font-semibold">
+              Intelligent Search
+            </p>
 
+            <div className="relative group w-full max-w-xl mx-auto my-6">
+  {/* Thee search bar component */}
+  <div className="absolute -inset-0.5 bg-blue-500/20 rounded-2xl blur opacity-0 group-focus-within:opacity-100 transition duration-500"></div>
+  
+  <div className="relative flex items-center">
+    {/* Fixed Icon Gutter */}
+    <div className="absolute left-4 z-10 flex items-center pointer-events-none">
+      <svg 
+        className="w-5 h-5 text-gray-500 group-focus-within:text-blue-400 transition-colors" 
+        fill="none" 
+        viewBox="0 0 24 24" 
+        stroke="currentColor"
+        strokeWidth="2"
+      >
+        <path strokeLinecap="round" strokeLinejoin="round" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
+      </svg>
+    </div>
+
+    {/* Input with increased left padding (pl-14) */}
+    <input
+      type="text"
+      placeholder="Query the neural engine..."
+      className="w-full bg-[#0d1117] text-gray-100 placeholder-gray-600 pl-14 pr-16 py-3.5 rounded-xl border border-white/10 focus:border-blue-500/50 outline-none transition-all shadow-2xl"
+      value={searchQuery}
+      onChange={(e) => setSearchQuery(e.target.value)}
+      onKeyDown={(e) => e.key === 'Enter' && handleNeuralSearch()}
+    />
+
+    {/* CTRL + K Decoration */}
+    <div className="absolute right-4 flex items-center space-x-1 opacity-30 select-none">
+      <span className="px-1.5 py-0.5 text-[9px] font-bold border border-gray-700 rounded bg-gray-800 text-gray-400">CTRL</span>
+      <span className="px-1.5 py-0.5 text-[9px] font-bold border border-gray-700 rounded bg-gray-800 text-gray-400">K</span>
+    </div>
+  </div>
+</div>
+            
             {/* Recent transactions table */}
             <div className="bg-slate-900 rounded-2xl border border-slate-800 overflow-hidden">
               <div className="p-6 border-b border-slate-800 flex justify-between items-center bg-slate-900/50">
@@ -189,7 +245,7 @@ const { totalSpent, chartData } = useMemo(() => {
                     </tr>
                   </thead>
                   <tbody className="divide-y divide-slate-800">
-                    {transactions.map((t, index) => (
+                    {filteredTransactions.map((t, index) => (
                       <tr key={index} className="hover:bg-slate-800/30 transition-colors group">
                         <td className="p-4 text-sm text-slate-400 font-mono">{t.date}</td>
                         <td className="p-4 font-medium text-slate-200">{t.description}</td>
@@ -203,6 +259,15 @@ const { totalSpent, chartData } = useMemo(() => {
                         </td>
                       </tr>
                     ))}
+
+                    {/* Show this if search returns nothing */}
+                    {filteredTransactions.length === 0 && (
+                      <tr>
+                        <td colSpan="4" className="p-12 text-center text-slate-500 italic">
+                          No transactions found matching "{searchQuery}"
+                        </td>
+                      </tr>
+                    )}
                   </tbody>
                 </table>
               </div>
