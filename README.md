@@ -9,6 +9,11 @@ Cognis is a professional-grade financial intelligence engine designed to replace
 
 ---
 
+## ◈ Dashboard Preview
+![Cognis Dashboard](/assets/cognis_dashboard_portfolio.jpg)
+
+---
+
 ## ◈ Project Description
 In an era of data harvesting, Cognis was built to prove that sophisticated financial analysis doesn't require cloud exposure. The application handles the end-to-end lifecycle of financial data: from raw CSV ingestion and AI-augmented semantic labeling to persistent storage and real-time visualization. 
 
@@ -20,17 +25,17 @@ The core philosophy is **Local-First Intelligence**. By utilizing a local Ollama
 Cognis utilizes a decoupled client-server architecture designed for low latency and high data integrity.
 
 ### 1. Intelligence Layer (Ollama & Llama 3)
-*   **Semantic Analysis:** Raw transaction strings are fed into a localized Llama 3 model.
-*   **Contextual Inference:** The AI interprets ambiguous vendor names (e.g., "SQ *PLUMBING") and maps them to logical categories (e.g., "Home Maintenance").
+* **Semantic Analysis:** Raw transaction strings are fed into a localized Llama 3 model.
+* **Contextual Inference:** The AI interprets ambiguous vendor names (e.g., "SQ *PLUMBING") and maps them to logical categories (e.g., "Home Maintenance").
 
 ### 2. Backend Engine (FastAPI & Pandas)
-*   **Stateless Processing:** API endpoints handle file uploads and data retrieval via asynchronous I/O.
-*   **Data Normalization:** Uses Pandas to perform de-duplication, ensuring that redundant uploads do not corrupt the financial ledger.
-*   **Immutable Persistence:** Implements absolute pathing logic on the host filesystem to maintain a consistent data state across server restarts and environment shifts.
+* **Stateless Processing:** API endpoints handle file uploads and data retrieval via asynchronous I/O.
+* **Data Normalization:** Uses Pandas to perform de-duplication, ensuring that redundant uploads do not corrupt the financial ledger.
+* **Immutable Persistence:** Implements absolute pathing logic on the host filesystem to maintain a consistent data state across server restarts and environment shifts.
 
 ### 3. Interface Layer (React & Tailwind)
-*   **State Synchronization:** Utilizes React hooks (`useCallback`, `useEffect`) to ensure the UI stays in sync with the backend CSV state.
-*   **Reactive Visualization:** Implements Recharts for dynamic data modeling and CSS-based "Dark Mode" optimized for professional workstations.
+* **State Synchronization:** Utilizes React hooks (`useCallback`, `useEffect`) to ensure the UI stays in sync with the backend CSV state.
+* **Reactive Visualization:** Implements Recharts for dynamic data modeling and CSS-based "Dark Mode" optimized for professional workstations.
 
 ---
 
@@ -47,9 +52,9 @@ Cognis utilizes a decoupled client-server architecture designed for low latency 
 ## ◈ Deployment Instructions
 
 ### Prerequisites
-*   **Hardware:** Optimized for local LLM execution (8GB+ RAM recommended).
-*   **Environment:** Python 3.10+, Node.js 18+.
-*   **LLM Host:** [Ollama](https://ollama.com/) must be installed and running `llama3`.
+* **Hardware:** Optimized for local LLM execution (8GB+ RAM recommended).
+* **Environment:** Python 3.10+, Node.js 18+.
+* **LLM Host:** [Ollama](https://ollama.com/) must be installed and running `llama3`.
 
 ### 1. Backend Deployment
 ```bash
