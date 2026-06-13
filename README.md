@@ -10,7 +10,7 @@ Cognis is a professional-grade financial intelligence engine designed to replace
 ---
 
 ## ◈ Dashboard Preview
-![Cognis Dashboard](/assets/cognis_dashboard_portfolio.jpg)
+![Cognis Dashboard](/frontend/src/assets/UI-screenshot.jpeg)
 
 ---
 
